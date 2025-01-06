@@ -1,0 +1,77 @@
+system: 1.0.0
+info:
+  name: mind-cast-server
+  vars:
+    MONGO_URI:
+      description: >-
+        MongoDB的连接URI地址，用于数据库连接。
+    JWT_SECRET:
+      description: >-
+        用于生成JWT的密钥。
+    NODE_ENV:
+      description: >-
+        配置环境，包括development，production等。
+envs:
+  dev:
+    branch: dev
+  prod:
+    branch: main
+routes:
+  main_env: prod
+  main_app: server
+auths:
+  apikey:
+    type: api_key
+    envs:
+      dev:
+        in: header
+        name: API-KEY
+        value: ${{vars.JWT_SECRET}}
+      prod:
+        in: header
+        name: API-KEY
+        value: ${{vars.JWT_SECRET}}
+apps:
+  server:
+    type: web_api
+    envs:
+      dev:
+        build:
+          root_path: ./src
+          script: npm install; npm run dev
+        provision:
+          type: nodejs18x
+          root_path: ./src
+          start_command: node ./src/bin/index.js
+          timeout: 120
+          vars:
+            - MONGO_URI
+            - JWT_SECRET
+            - NODE_ENV
+      prod:
+        build:
+          root_path: ./src
+          script: npm install; npm run start
+        provision:
+          type: nodejs18x
+          root_path: ./src
+          start_command: node ./src/bin
+          timeout: 120
+          vars:
+            - MONGO_URI
+            - JWT_SECRET
+            - NODE_ENV
+services:
+  database:
+    type: kv_store
+    envs:
+      dev:
+        provision:
+          type: kv_store_v1
+          namespaces:
+            - testdata
+      prod:
+        provision:
+          type: kv_store_v1
+          namespaces:
+            - appdata

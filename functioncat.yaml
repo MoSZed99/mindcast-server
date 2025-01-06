@@ -10,7 +10,7 @@ info:
         用于生成JWT的密钥。
     NODE_ENV:
       description: >-
-        配置环境，包括development，production等。
+        配置环境，包括development，production，等。
 envs:
   dev:
     branch: dev

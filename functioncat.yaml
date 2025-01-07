@@ -1,16 +1,15 @@
 system: 1.0.0
 info:
-  name: mind-cast-server
+  name: mindcast-server
   vars:
-    MONGO_URI:
-      description: >-
-        MongoDB 的连接 URI 地址，用于数据库连接。
-    JWT_SECRET:
-      description: >-
-        用于生成 JWT 的密钥。
     NODE_ENV:
-      description: >-
-        配置环境，包括 development、production 等。
+      description: "应用运行环境，如 development 或 production。"
+    HEROKU_API_KEY:
+      description: "Heroku 平台的 API Key，用于部署和管理应用。"
+    MONGO_URI:
+      description: "MongoDB 数据库的连接 URI。"
+    JWT_SECRET:
+      description: "用于生成 JWT 的密钥。"
 envs:
   dev:
     branch: dev
@@ -20,53 +19,55 @@ routes:
   main_env: prod
   main_app: server
 auths:
-  apikey:
+  heroku:
     type: api_key
     envs:
       dev:
         in: header
-        name: API-KEY
-        value: ${{vars.JWT_SECRET}}
+        name: HEROKU-API-KEY
+        value: ${{vars.HEROKU_API_KEY}}
       prod:
         in: header
-        name: API-KEY
-        value: ${{vars.JWT_SECRET}}
+        name: HEROKU-API-KEY
+        value: ${{vars.HEROKU_API_KEY}}
 apps:
   server:
     type: web_api
     envs:
       dev:
         build:
-          root_path: ./src
+          root_path: ./
           script: |
             npm install
             npm run lint
             npm run test:coveralls
         provision:
           type: nodejs18x
-          root_path: ./src
-          start_command: node ./src/bin/index.js
+          root_path: ./
+          start_command: node index.js
           timeout: 120
           vars:
+            - NODE_ENV
+            - HEROKU_API_KEY
             - MONGO_URI
             - JWT_SECRET
-            - NODE_ENV
       prod:
         build:
-          root_path: ./src
+          root_path: ./
           script: |
             npm install
             npm run lint
             npm run test:coveralls
         provision:
           type: nodejs18x
-          root_path: ./src
-          start_command: node ./src/bin
+          root_path: ./
+          start_command: node index.js
           timeout: 120
           vars:
+            - NODE_ENV
+            - HEROKU_API_KEY
             - MONGO_URI
             - JWT_SECRET
-            - NODE_ENV
 services:
   database:
     type: kv_store
@@ -75,7 +76,7 @@ services:
         provision:
           type: kv_store_v1
           namespaces:
-            - testdata
+            - devdata
       prod:
         provision:
           type: kv_store_v1
